@@ -1,0 +1,6 @@
+# Reviewers the Defect Resolution Agent requests on its PRs. Replace the teams with your own users or teams.
+/src/Allocations.Ots/              @abc/ots-team
+/tests/Allocations.Ots.Tests/      @abc/ots-team
+/src/Allocations.RefData/          @abc/refdata-team
+/tests/Allocations.RefData.Tests/  @abc/refdata-team
+/infra/                            @abc/platform-team

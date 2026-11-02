@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abc.Allocations.Ots</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Allocations.RefData\Allocations.RefData.csproj" />
+  </ItemGroup>
+</Project>
