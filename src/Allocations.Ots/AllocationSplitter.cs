@@ -11,15 +11,51 @@ public static class AllocationSplitter
     {
         if (units < 0)
             throw new ArgumentOutOfRangeException(nameof(units), "units must be non-negative");
-        var total = weights.Values.Sum();
-        if (total <= 0)
+        if (weights is null)
+            throw new ArgumentNullException(nameof(weights));
+
+        // Preserve existing contract: zero/negative total weight is rejected.
+        var totalWeight = weights.Values.Sum();
+        if (totalWeight <= 0)
             throw new ArgumentException("weights must sum to a positive number", nameof(weights));
 
-        var shares = new Dictionary<string, int>();
+        foreach (var (_, weight) in weights)
+        {
+            if (weight < 0)
+                throw new ArgumentOutOfRangeException(nameof(weights), "weights must be non-negative");
+        }
+
+        // Hamilton / largest-remainder method:
+        // 1) floor each exact share
+        // 2) distribute remaining units to largest fractional remainders
+        var allocations = new Dictionary<string, int>(weights.Count);
+        var remainders = new List<(string Store, decimal FractionalPart)>(weights.Count);
+
+        var allocated = 0;
         foreach (var (store, weight) in weights)
         {
-            shares[store] = (int)(units * weight / total);
+            var exactShare = units * weight / totalWeight;
+            var integerPart = (int)decimal.Floor(exactShare);
+
+            allocations[store] = integerPart;
+            allocated += integerPart;
+
+            remainders.Add((store, exactShare - integerPart));
         }
-        return shares;
+
+        var remainderUnits = units - allocated;
+        if (remainderUnits > 0)
+        {
+            // Deterministic tie-breaker: store id ascending.
+            foreach (var (store, _) in remainders
+                         .OrderByDescending(r => r.FractionalPart)
+                         .ThenBy(r => r.Store)
+                         .Take(remainderUnits))
+            {
+                allocations[store] = allocations[store] + 1;
+            }
+        }
+
+        return allocations;
     }
 }
