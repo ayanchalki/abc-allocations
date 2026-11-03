@@ -13,7 +13,11 @@ public static class PackRounder
             throw new ArgumentOutOfRangeException(nameof(packSize), "pack size must be positive");
         if (units < 0)
             throw new ArgumentOutOfRangeException(nameof(units), "units must be non-negative");
-        return units / packSize;
+        if (units == 0)
+            return 0;
+
+        // Ceiling division so any positive partial pack rounds up to one full pack.
+        return (units + packSize - 1) / packSize;
     }
 
     /// <summary>Units actually shipped once the allocation is rounded to packs.</summary>
