@@ -11,15 +11,41 @@ public static class AllocationSplitter
     {
         if (units < 0)
             throw new ArgumentOutOfRangeException(nameof(units), "units must be non-negative");
+
         var total = weights.Values.Sum();
         if (total <= 0)
             throw new ArgumentException("weights must sum to a positive number", nameof(weights));
 
-        var shares = new Dictionary<string, int>();
+        // Compute exact fractional shares, take floors, then distribute remaining units
+        // to the largest fractional remainders (stable tie-break by store key).
+        var exactShares = new Dictionary<string, decimal>(weights.Count);
+        var allocations = new Dictionary<string, int>(weights.Count);
+
+        var allocated = 0;
         foreach (var (store, weight) in weights)
         {
-            shares[store] = (int)(units * weight / total);
+            var exact = units * weight / total;
+            exactShares[store] = exact;
+
+            var baseUnits = (int)decimal.Floor(exact);
+            allocations[store] = baseUnits;
+            allocated += baseUnits;
         }
-        return shares;
+
+        var remaining = units - allocated;
+        if (remaining > 0)
+        {
+            foreach (var store in exactShares
+                         .Select(kvp => new { Store = kvp.Key, Remainder = kvp.Value - decimal.Floor(kvp.Value) })
+                         .OrderByDescending(x => x.Remainder)
+                         .ThenBy(x => x.Store, StringComparer.Ordinal)
+                         .Take(remaining)
+                         .Select(x => x.Store))
+            {
+                allocations[store]++;
+            }
+        }
+
+        return allocations;
     }
 }
