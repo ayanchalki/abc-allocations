@@ -10,7 +10,7 @@ public sealed class StoreDirectory
 
     public StoreDirectory(IEnumerable<Store> stores)
     {
-        _stores = new Dictionary<string, Store>();
+        _stores = new Dictionary<string, Store>(StringComparer.OrdinalIgnoreCase);
         foreach (var store in stores)
         {
             if (string.IsNullOrWhiteSpace(store.Code))
