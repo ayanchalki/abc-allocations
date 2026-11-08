@@ -10,7 +10,7 @@ public sealed class StoreDirectory
 
     public StoreDirectory(IEnumerable<Store> stores)
     {
-        _stores = new Dictionary<string, Store>();
+        _stores = new Dictionary<string, Store>(StringComparer.OrdinalIgnoreCase);
         foreach (var store in stores)
         {
             if (string.IsNullOrWhiteSpace(store.Code))
@@ -28,8 +28,13 @@ public sealed class StoreDirectory
         _stores.TryGetValue(code.Trim(), out var store) ? store : null;
 
     /// <summary>Finds a store by code, or throws when it is not known.</summary>
-    public Store Get(string code) =>
-        Find(code) ?? throw new KeyNotFoundException($"unknown store code '{code}'");
+    public Store Get(string code)
+    {
+        if (_stores.TryGetValue(code.Trim(), out var store))
+            return store;
+
+        throw new KeyNotFoundException($"unknown store code '{code}'");
+    }
 
     /// <summary>Active stores only, in code order.</summary>
     public IReadOnlyList<Store> Active() =>
