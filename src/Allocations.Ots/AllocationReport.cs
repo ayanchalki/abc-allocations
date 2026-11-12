@@ -11,10 +11,28 @@ public static class AllocationReport
         var sb = new StringBuilder("po,store,units,packs\n");
         foreach (var line in lines)
         {
-            sb.Append(CultureInfo.InvariantCulture, $"{poNumber},{line.StoreCode},{line.Units},{line.Packs}\n");
+            sb.Append(CultureInfo.InvariantCulture, $"{EscapeCsv(poNumber)},{EscapeCsv(line.StoreCode)},{EscapeCsv(line.Units)},{EscapeCsv(line.Packs)}\n");
         }
         return sb.ToString();
     }
 
     public static int TotalUnits(IEnumerable<AllocationLine> lines) => lines.Sum(l => l.Units);
+
+    private static string EscapeCsv(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        var needsQuotes = value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r');
+        if (!needsQuotes)
+        {
+            return value;
+        }
+
+        return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
+    private static string EscapeCsv(int value) => value.ToString(CultureInfo.InvariantCulture);
 }
