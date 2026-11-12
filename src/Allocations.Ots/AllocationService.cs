@@ -26,8 +26,13 @@ public sealed class AllocationService(StoreDirectory stores)
     public IReadOnlyList<AllocationLine> AllocateTo(IEnumerable<string> storeCodes, int units, int packSize)
     {
         var chosen = storeCodes.Select(stores.Get).ToList();
-        var shares = AllocationSplitter.Allocate(units, chosen.ToDictionary(s => s.Code, s => s.Weight));
-        return chosen
+        var uniqueChosen = chosen
+            .GroupBy(s => s.Code)
+            .Select(g => g.First())
+            .ToList();
+
+        var shares = AllocationSplitter.Allocate(units, uniqueChosen.ToDictionary(s => s.Code, s => s.Weight));
+        return uniqueChosen
             .Select(s => new AllocationLine(s.Code, shares[s.Code], PackRounder.ToPacks(shares[s.Code], packSize)))
             .ToList();
     }
